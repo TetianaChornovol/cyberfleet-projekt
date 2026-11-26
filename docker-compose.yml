@@ -1,0 +1,124 @@
+services:
+  hq-controller:
+    build: ./docker/ubuntu
+    container_name: hq-controller
+    hostname: hq-controller
+    environment:
+      GENERATE_CONTROLLER_KEY: "1"
+      START_NGINX: "1"
+    volumes:
+      - ssh-pub:/shared-pub
+      - ./dashboard:/var/www/html
+    ports:
+      - "8080:80"
+    networks:
+      mgmt_net:
+        ipv4_address: 172.30.10.10
+      corp_net:
+        ipv4_address: 172.30.20.10
+      dmz_iot:
+        ipv4_address: 172.30.30.10
+    restart: unless-stopped
+
+  backup-vault:
+    build: ./docker/debian
+    container_name: backup-vault
+    hostname: backup-vault
+    volumes:
+      - ssh-pub:/shared-pub:ro
+      - backup-data:/backups
+    networks:
+      mgmt_net:
+        ipv4_address: 172.30.10.20
+    restart: unless-stopped
+
+  ws-dev-01:
+    build: ./docker/ubuntu
+    container_name: ws-dev-01
+    hostname: ws-dev-01
+    volumes:
+      - ssh-pub:/shared-pub:ro
+    networks:
+      corp_net:
+        ipv4_address: 172.30.20.20
+    restart: unless-stopped
+
+  ws-fin-01:
+    build: ./docker/ubuntu
+    container_name: ws-fin-01
+    hostname: ws-fin-01
+    volumes:
+      - ssh-pub:/shared-pub:ro
+      - fin-data:/home/raamatupidaja/Raamatupidamine_2026
+    networks:
+      corp_net:
+        ipv4_address: 172.30.20.30
+    restart: unless-stopped
+
+  srv-app-01:
+    build: ./docker/rocky
+    container_name: srv-app-01
+    hostname: srv-app-01
+    volumes:
+      - ssh-pub:/shared-pub:ro
+    networks:
+      corp_net:
+        ipv4_address: 172.30.20.40
+    restart: unless-stopped
+
+  kiosk-lobby:
+    build: ./docker/debian
+    container_name: kiosk-lobby
+    hostname: kiosk-lobby
+    volumes:
+      - ssh-pub:/shared-pub:ro
+    networks:
+      dmz_iot:
+        ipv4_address: 172.30.30.40
+    restart: unless-stopped
+
+  iot-sensor-1:
+    build: ./docker/alpine
+    container_name: iot-sensor-1
+    hostname: iot-sensor-1
+    volumes:
+      - ssh-pub:/shared-pub:ro
+    networks:
+      dmz_iot:
+        ipv4_address: 172.30.30.20
+    restart: unless-stopped
+
+  iot-cam-1:
+    build: ./docker/debian
+    container_name: iot-cam-1
+    hostname: iot-cam-1
+    volumes:
+      - ssh-pub:/shared-pub:ro
+    networks:
+      dmz_iot:
+        ipv4_address: 172.30.30.30
+    restart: unless-stopped
+
+volumes:
+  ssh-pub:
+  backup-data:
+  fin-data:
+
+networks:
+  mgmt_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24
+
+  corp_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.20.0/24
+
+  dmz_iot:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.30.0/24
