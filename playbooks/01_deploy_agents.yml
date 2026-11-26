@@ -1,0 +1,35 @@
+
+---
+- name: CyberFleet 2026 - Prepare Linux Fleet
+  hosts: linux_fleet
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Display hostname
+      ansible.builtin.debug:
+        msg: "Preparing {{ inventory_hostname }}"
+
+    - name: Check Python installation
+      ansible.builtin.command: python3 --version
+      changed_when: false
+
+    - name: Check operating system
+      ansible.builtin.debug:
+        msg: "{{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Create CyberFleet directory
+      ansible.builtin.file:
+        path: /opt/cyberfleet
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Create agent configuration directory
+      ansible.builtin.file:
+        path: /opt/cyberfleet/config
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
